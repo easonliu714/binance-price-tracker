@@ -332,4 +332,4 @@ def main(request=None):
         update_google_sheet(all_signals)
         
         execution_time = time.time() - start_time
-        logger.info(f"執行完成，共發現 {len(all_signals)}")
+        logger.info(f"執行完成，共發現 {len(all_signals)}個訊號,持行時間為 {execution_time:.2f} 秒") 
