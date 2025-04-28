@@ -11,18 +11,32 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 import telegram
+import gc
 
 # 設定日誌
 logging.basicConfig(level=logging.INFO, 
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+# 環境變數檢查與獲取
+def get_env_var(var_name, fallback=None, required=False):
+    value = os.environ.get(var_name, fallback)
+    if required and not value:
+        logger.error(f"缺少必要的環境變數: {var_name}")
+        raise EnvironmentError(f"缺少必要的環境變數: {var_name}")
+    if not value and not fallback:
+        logger.warning(f"環境變數 {var_name} 未設定")
+    return value
+
 # 環境變數
-TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
-TELEGRAM_CHAT_ID = os.environ.get('TELEGRAM_CHAT_ID')
-GOOGLE_SHEET_CREDS_JSON = os.environ.get('GOOGLE_SHEET_CREDS_JSON')
-SPREADSHEET_ID = "1Bny_4th50YM2mKSTZDbH7Zqd9Uhl6PHMCCveFMgqMrE"
-SHEET_NAME = "Sheet1"
+TELEGRAM_TOKEN = get_env_var('TELEGRAM_TOKEN', required=True)
+TELEGRAM_CHAT_ID = get_env_var('TELEGRAM_CHAT_ID', required=True)
+GOOGLE_SHEET_CREDS_JSON = get_env_var('GOOGLE_SHEET_CREDS_JSON', required=True)
+SPREADSHEET_ID = get_env_var('SPREADSHEET_ID', "1Bny_4th50YM2mKSTZDbH7Zqd9Uhl6PHMCCveFMgqMrE")
+SHEET_NAME = get_env_var('SHEET_NAME', "Sheet1")
+
+# 執行時間限制 (9分鐘，考慮到 Cloud Run 最大允許 10 分鐘)
+MAX_EXECUTION_TIME = 540  
 
 # 幣安 API 端點
 BINANCE_API_BASE = "https://api.binance.com/api"
@@ -31,8 +45,12 @@ def get_usdt_trading_pairs():
     """獲取所有與 USDT 配對的交易對"""
     logger.info("開始獲取 USDT 交易對...")
     
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
+    }
+        
     try:
-        response = requests.get(f"{BINANCE_API_BASE}/v3/exchangeInfo")
+        response = requests.get(f"{BINANCE_API_BASE}/v3/exchangeInfo", timeout=30)
         response.raise_for_status()
         data = response.json()
         
@@ -57,7 +75,8 @@ def get_klines(symbol, interval="1h", limit=500):
                 "symbol": symbol,
                 "interval": interval,
                 "limit": limit
-            }
+            },
+            timeout=30
         )
         response.raise_for_status()
         klines = response.json()
@@ -298,6 +317,12 @@ def main(request=None):
         
         for symbol in trading_pairs:
             try:
+                # 檢查是否接近超時
+                current_time = time.time()
+                if current_time - start_time > MAX_EXECUTION_TIME:
+                    logger.warning(f"接近超時限制，停止處理更多交易對，已處理 {len(all_signals)} 個信號")
+                    break
+                
                 # 獲取 K 線數據
                 df = get_klines(symbol, interval="1h", limit=500)
                 
@@ -324,6 +349,11 @@ def main(request=None):
                         f"時間: {taipei_time}"
                     )
                     send_telegram_message(message)
+                
+                # 清理記憶體
+                del df
+                gc.collect()
+                
             except Exception as e:
                 logger.error(f"處理 {symbol} 時發生錯誤: {str(e)}")
                 continue
@@ -332,4 +362,10 @@ def main(request=None):
         update_google_sheet(all_signals)
         
         execution_time = time.time() - start_time
-        logger.info(f"執行完成，共發現 {len(all_signals)}個訊號,持行時間為 {execution_time:.2f} 秒") 
+        logger.info(f"執行完成，共發現 {len(all_signals)} ")
+        logger.info(f"執行時間: {execution_time:.2f} 秒")
+        
+        return f"執行完成，共發現 {len(all_signals)} 個訊號"
+    except Exception as e:
+        logger.error(f"執行主函數時發生錯誤: {str(e)}")
+        return f"執行錯誤: {str(e)}"
