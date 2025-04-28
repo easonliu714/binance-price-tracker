@@ -36,3 +36,4 @@ ENV/
 # Local configuration
 .env
 credentials.json
+service_account.json
