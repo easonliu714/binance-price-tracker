@@ -209,7 +209,7 @@ def get_google_sheets_service():
 
 def update_google_sheet(signals):
     """更新 Google Sheet 數據"""
-    logger.info(f"更新 Google Sheet，共 {len(signals)} 筆信號")
+    logger.info(f"更新 Google Sheet 共 {len(signals)} 筆信號")
     
     if not signals:
         logger.info("沒有信號需要更新到 Google Sheet")
@@ -332,4 +332,4 @@ def main(request=None):
         update_google_sheet(all_signals)
         
         execution_time = time.time() - start_time
-        logger.info(f"執行完成，共發現 {len(all_signals)} 
+        logger.info(f"執行完成，共發現 {len(all_signals)}")
