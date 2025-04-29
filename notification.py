@@ -1,6 +1,7 @@
 import logging
 import requests
 
+
 # 設定日誌記錄
 logger = logging.getLogger(__name__)
 
