@@ -100,3 +100,4 @@ def get_current_price(symbol):
     except Exception as e:
         logger.error(f"獲取 {symbol} 價格時發生錯誤: {e}")
         return None
+
