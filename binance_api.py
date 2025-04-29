@@ -1,6 +1,5 @@
 import logging
 import requests
-from binance.connector import Client
 
 # 設定日誌記錄
 logger = logging.getLogger(__name__)
