@@ -111,3 +111,4 @@ def calculate_volume_indicators(klines):
     except Exception as e:
         logger.error(f"計算交易量指標時發生錯誤: {e}")
         return None
+
