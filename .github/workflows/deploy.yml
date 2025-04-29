@@ -7,32 +7,22 @@ on:
 
 jobs:
   deploy:
-    name: Build and Deploy
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
 
-      - name: Authenticate with Google Cloud
-        uses: google-github-actions/auth@v1
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0.2.0
         with:
-          credentials_json: '${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}'
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-      - name: Set up Google Cloud CLI
-        uses: google-github-actions/setup-gcloud@v1
-        with:
-          project_id: binance-price-tracker-457613
-
-      - name: Build and push Docker image
+      - name: Build and Deploy to Cloud Run
         run: |
-          gcloud builds submit --tag gcr.io/binance-price-tracker-457613/binance-tracker
-
-      - name: Deploy to Cloud Run
-        run: |
+          gcloud builds submit --tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/binance-tracker .
           gcloud run deploy binance-tracker \
-            --image gcr.io/binance-price-tracker-457613/binance-tracker \
+            --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/binance-tracker \
             --platform managed \
             --region asia-east1 \
             --allow-unauthenticated
-
