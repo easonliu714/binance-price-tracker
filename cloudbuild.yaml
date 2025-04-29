@@ -1,24 +1,10 @@
-steps:
-  # 建立Docker映像
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/binance-price-tracker-457613/binance-tracker', '.']
-  
-  # 推送到Container Registry
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/binance-price-tracker-457613/binance-tracker']
-  
-  # 部署到Cloud Run
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: gcloud
-    args:
-      - 'run'
-      - 'deploy'
-      - 'binance-tracker'
-      - '--image=gcr.io/binance-price-tracker-457613/binance-tracker'
-      - '--platform=managed'
-      - '--region=asia-east1'
-      - '--set-env-vars=TELEGRAM_TOKEN=7499365215:AAFRLQfvmrVI_nIyD_5SYpuHMDkM_t0AWEk,TELEGRAM_CHAT_ID=7283738727'
-      - '--update-secrets=GOOGLE_SHEET_CREDS_JSON=projects/915608799506/secrets/google-sheet-creds:latest'
-
-images:
-  - 'gcr.io/binance-price-tracker-457613/binance-tracker'
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: gcloud
+  args:
+    - 'run'
+    - 'deploy'
+    - 'binance-tracker'
+    - '--image=gcr.io/binance-price-tracker-457613/binance-tracker'
+    - '--platform=managed'
+    - '--region=asia-east1'
+    - '--update-secrets=GOOGLE_SHEET_CREDS_JSON=google-sheet-creds:latest,TELEGRAM_TOKEN=telegram-token:latest,TELEGRAM_CHAT_ID=telegram-chat-id:latest'
