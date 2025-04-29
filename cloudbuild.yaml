@@ -1,10 +1,29 @@
-- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-  entrypoint: gcloud
-  args:
-    - 'run'
-    - 'deploy'
-    - 'binance-tracker'
-    - '--image=gcr.io/binance-price-tracker-457613/binance-tracker'
-    - '--platform=managed'
-    - '--region=asia-east1'
-    - '--update-secrets=GOOGLE_SHEET_CREDS_JSON=google-sheet-creds:latest,TELEGRAM_TOKEN=telegram-token:latest,TELEGRAM_CHAT_ID=telegram-chat-id:latest'
+steps:
+  # 構建 Docker 映像
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/binance-price-tracker-457613/binance-tracker:latest', '.']
+
+  # 推送映像到 Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/binance-price-tracker-457613/binance-tracker:latest']
+
+  # 部署到 Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'binance-tracker'
+      - '--image=gcr.io/binance-price-tracker-457613/binance-tracker:latest'
+      - '--platform=managed'
+      - '--region=asia-east1'
+      - '--memory=512Mi'
+      - '--cpu=1'
+      - '--update-secrets=GOOGLE_SHEET_CREDS_JSON=google-sheet-creds:latest,TELEGRAM_TOKEN=telegram-token:latest,TELEGRAM_CHAT_ID=telegram-chat-id:latest'
+      - '--allow-unauthenticated'  # 若需限制存取，請移除此行並設定 IAM 權限
+
+images:
+  - 'gcr.io/binance-price-tracker-457613/binance-tracker:latest'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
