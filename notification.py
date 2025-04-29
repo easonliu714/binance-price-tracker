@@ -39,3 +39,4 @@ def send_telegram_message(token, chat_id, message):
     except Exception as e:
         logger.error(f"發送Telegram訊息時發生錯誤: {e}")
         return False
+
