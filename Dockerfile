@@ -1,6 +1,6 @@
 # 使用官方 Python 3.11 映像
 FROM python:3.11-slim
-
+# 自動更新部署測試
 # 設定工作目錄
 WORKDIR /app
 
