@@ -22,7 +22,10 @@ jobs:
 
       - name: Configure Docker for Artifact Registry
         run: |
-          gcloud auth configure-docker us.gcr.io
+          gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+          gcloud auth configure-docker gcr.io,us.gcr.io --quiet
+          gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://gcr.io
+          gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://us.gcr.io
 
       - name: Build and Push Docker image
         run: |
