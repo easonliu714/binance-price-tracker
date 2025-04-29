@@ -1,4 +1,4 @@
-binance-connector-python==3.4.0
+binance-connector==3.12
 requests==2.31.0
 pandas==2.2.2
 gspread==6.0.2
