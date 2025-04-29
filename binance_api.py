@@ -2,6 +2,7 @@ import logging
 import requests
 from datetime import datetime
 
+
 # 設定日誌記錄
 logger = logging.getLogger(__name__)
 
