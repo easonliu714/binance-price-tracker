@@ -3,7 +3,7 @@ name: Deploy to Cloud Run
 on:
   push:
     branches:
-      - master  # 如果你的分支叫 main，這裡改成 main
+      - main  # 如果你的分支叫 main，這裡改成 main
 
 jobs:
   deploy:
