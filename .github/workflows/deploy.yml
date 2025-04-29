@@ -20,7 +20,11 @@ jobs:
       - name: Set up Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
 
-      - name: Build Docker image
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker us.gcr.io
+
+      - name: Build and Push Docker image
         run: |
           docker build -t gcr.io/binance-price-tracker-457613/binance-tracker:latest .
           docker push gcr.io/binance-price-tracker-457613/binance-tracker:latest
