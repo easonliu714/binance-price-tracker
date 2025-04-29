@@ -1,0 +1,50 @@
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches:
+      - main  # 當推送到 main 分支時觸發
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 檢查程式碼
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 設置 Google Cloud 認證
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      # 設置 Google Cloud SDK
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: binance-price-tracker-457613
+
+      # 配置 Docker 以使用 gcloud 認證
+      - name: Configure Docker
+        run: gcloud auth configure-docker gcr.io
+
+      # 構建 Docker 映像
+      - name: Build Docker image
+        run: docker build -t gcr.io/binance-price-tracker-457613/binance-tracker:latest .
+
+      # 推送 Docker 映像到 Google Container Registry
+      - name: Push Docker image
+        run: docker push gcr.io/binance-price-tracker-457613/binance-tracker:latest
+
+      # 部署到 Cloud Run
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy binance-tracker \
+            --image gcr.io/binance-price-tracker-457613/binance-tracker:latest \
+            --platform managed \
+            --region asia-east1 \
+            --set-env-vars TELEGRAM_TOKEN=${{ secrets.TELEGRAM_TOKEN }},TELEGRAM_CHAT_ID=${{ secrets.TELEGRAM_CHAT_ID }} \
+            --update-secrets GOOGLE_SHEET_CREDS_JSON=google-sheet-creds:latest \
+            --allow-unauthenticated
