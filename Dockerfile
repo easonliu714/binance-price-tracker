@@ -16,3 +16,4 @@ ENV PORT=8080
 
 # 啟動 Flask 應用（使用 Gunicorn）
 CMD ["gunicorn", "-b", "0.0.0.0:8080", "main:app"]
+
