@@ -11,7 +11,7 @@ from binance_api import get_trading_pairs, get_klines
 from calculator import calculate_price_indicators, calculate_volume_indicators
 from notification import send_telegram_message
 from sheet_handler import update_sheet, cleanup_old_data, setup_sheet_client
-
+# 自動更新部署測試
 # 設定日誌記錄
 logging.basicConfig(
     level=logging.INFO,
