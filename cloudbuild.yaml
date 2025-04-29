@@ -1,0 +1,5 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/binance-tracker', '.']
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    args: ['run', 'deploy', 'binance-tracker', '--image', 'gcr.io/$PROJECT_ID/binance-tracker', '--platform', 'managed', '--region', 'asia-east1', '--allow-unauthenticated']
