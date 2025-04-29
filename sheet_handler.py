@@ -106,3 +106,4 @@ def cleanup_old_data(client, spreadsheet_id, sheet_name, max_rows=10000):
 
     logger.error("清理舊數據失敗，已達最大重試次數")
     return False
+
