@@ -12,4 +12,5 @@ steps:
           --image gcr.io/binance-price-tracker-457613/binance-tracker \
           --platform managed \
           --region asia-east1 \
-          --allow-unauthenticated
+          --allow-unauthenticated \
+          --project binance-price-tracker-457613
