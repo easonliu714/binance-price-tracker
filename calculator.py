@@ -1,6 +1,7 @@
 import logging
 import numpy as np
 
+
 # 設定日誌記錄
 logger = logging.getLogger(__name__)
 
