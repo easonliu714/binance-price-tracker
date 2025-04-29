@@ -7,13 +7,14 @@ on:
 
 jobs:
   deploy:
+    name: Build and Deploy
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Authenticate to Google Cloud
+      - name: Authenticate with Google Cloud
         uses: google-github-actions/auth@v1
         with:
           credentials_json: '${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}'
@@ -23,11 +24,14 @@ jobs:
         with:
           project_id: binance-price-tracker-457613
 
+      - name: Build and push Docker image
+        run: |
+          gcloud builds submit --tag gcr.io/binance-price-tracker-457613/binance-tracker
+
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy binance-tracker \
-            --project=binance-price-tracker-457613 \
-            --region=asia-east1 \
-            --source=. \
-            --platform=managed \
+            --image gcr.io/binance-price-tracker-457613/binance-tracker \
+            --platform managed \
+            --region asia-east1 \
             --allow-unauthenticated
