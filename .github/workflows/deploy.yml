@@ -3,24 +3,31 @@ name: Deploy to Cloud Run
 on:
   push:
     branches:
-      - main  # 如果你的分支叫 main，這裡改成 main
+      - main
 
 jobs:
   deploy:
-    name: Build and Deploy
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-    - name: Set up Cloud SDK
-      uses: google-github-actions/setup-gcloud@v2
-      with:
-        project_id: binance-price-tracker-457613
-        service_account_key: ${{ secrets.GCP_SA_KEY }}
-        export_default_credentials: true
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: '${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}'
 
-    - name: Trigger Cloud Build
-      run: |
-        gcloud builds submit --config cloudbuild.yaml
+      - name: Set up Google Cloud CLI
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: binance-price-tracker-457613
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy binance-tracker \
+            --project=binance-price-tracker-457613 \
+            --region=asia-east1 \
+            --source=. \
+            --platform=managed \
+            --allow-unauthenticated
