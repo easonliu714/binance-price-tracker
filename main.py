@@ -253,17 +253,6 @@ def run_scheduler_in_thread():
     thread.start()
 
 # Flask路由
-@app.route("/run", methods=["GET"])
-def run_analysis():
-    """提供 /run 路由以手動觸發分析任務"""
-    try:
-        logger.info("接收到 /run 請求，執行一次分析任務")
-        main_task()
-        return "Analysis complete", 200
-    except Exception as e:
-        logger.error(f"/run 路由執行分析任務時發生錯誤: {e}")
-        return f"Error: {str(e)}", 500
-
 @app.route('/', methods=['GET'])
 def index():
     """處理HTTP請求的端點"""
@@ -273,6 +262,17 @@ def index():
         return "Task completed successfully", 200
     except Exception as e:
         logger.error(f"處理HTTP請求時發生錯誤: {e}")
+        return f"Error: {str(e)}", 500
+
+@app.route('/run', methods=['GET'])
+def run_analysis():
+    """Cloud Run 觸發的分析任務入口"""
+    try:
+        logger.info("接收到 /run 請求，執行主要任務")
+        main_task()
+        return "Analysis complete", 200
+    except Exception as e:
+        logger.error(f"/run 路由處理錯誤: {e}")
         return f"Error: {str(e)}", 500
 
 # 主程式入口
