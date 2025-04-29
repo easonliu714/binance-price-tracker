@@ -1,12 +1,18 @@
-FROM python:3.9-slim
+# 使用官方 Python 3.11 映像
+FROM python:3.11-slim
 
+# 設定工作目錄
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
+# 複製需求檔與程式碼
+COPY requirements.txt requirements.txt
 COPY . .
 
-#CMD ["python", "main.py"] 修改為gunicorn
+# 安裝必要套件
+RUN pip install --no-cache-dir -r requirements.txt
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "main:app"]
+# 設定環境變數（可覆蓋）
+ENV PORT=8080
+
+# 啟動 Flask 應用（使用 Gunicorn）
+CMD ["gunicorn", "-b", "0.0.0.0:8080", "main:app"]
