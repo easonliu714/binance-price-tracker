@@ -281,3 +281,4 @@ if __name__ == "__main__":
         
     except Exception as e:
         logger.error(f"程式執行發生錯誤: {e}")
+
