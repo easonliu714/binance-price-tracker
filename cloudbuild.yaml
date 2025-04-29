@@ -20,7 +20,7 @@ steps:
       - '--memory=512Mi'
       - '--cpu=1'
       - '--update-secrets=GOOGLE_SHEET_CREDS_JSON=google-sheet-creds:latest,TELEGRAM_TOKEN=telegram-token:latest,TELEGRAM_CHAT_ID=telegram-chat-id:latest'
-      - '--allow-unauthenticated'  # 若需限制存取，請移除此行並設定 IAM 權限
+      - '--allow-unauthenticated'
 
 images:
   - 'gcr.io/binance-price-tracker-457613/binance-tracker:latest'
