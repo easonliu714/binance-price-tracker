@@ -4,6 +4,7 @@ import gspread
 from google.oauth2.service_account import Credentials
 from datetime import datetime
 
+
 # 設定日誌記錄
 logger = logging.getLogger(__name__)
 
