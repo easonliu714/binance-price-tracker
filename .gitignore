@@ -29,6 +29,7 @@ ENV/
 .vscode/
 *.swp
 *.swo
+*.bak
 
 # Logs
 *.log
@@ -37,3 +38,13 @@ ENV/
 .env
 credentials.json
 service_account.json
+*.pem
+*.key
+
+# Docker
+*.dockerignore
+Dockerfile.bak
+
+# Temporary files
+*.tmp
+*.temp
