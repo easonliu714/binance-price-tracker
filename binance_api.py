@@ -15,7 +15,6 @@ API_ENDPOINTS = [
 ]
 
 def create_session():
-    """創建帶重試機制的 requests Session"""
     session = requests.Session()
     retries = Retry(
         total=3,
@@ -24,8 +23,10 @@ def create_session():
         allowed_methods=["GET"]
     )
     session.mount("https://", HTTPAdapter(max_retries=retries))
+    session.headers.update({
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    })
     return session
-
 def get_trading_pairs():
     """
     從 Binance API 獲取所有 USDT 交易對，支援備用端點和重試
