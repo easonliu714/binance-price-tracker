@@ -51,15 +51,11 @@ def get_taipei_time():
         return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 def check_signals(trading_pair, price_data, volume_data, current_price):
-    """
-    檢查各種交易訊號
-    """
     signals = []
     signal_types = []
     taipei_time = get_taipei_time()
 
     try:
-        # 檢查當前成交量是否大於10000的門檻
         current_volume = volume_data["volume"][-1]
         if current_volume < 10000:
             logger.info(f"{trading_pair} 當前成交量 {current_volume} 小於10000，跳過訊號檢查")
@@ -67,19 +63,13 @@ def check_signals(trading_pair, price_data, volume_data, current_price):
 
         logger.info(f"{trading_pair} 當前成交量 {current_volume} 大於10000，開始檢查訊號")
 
-        # 解析價格數據
         ma17 = price_data["MA17"][-1]
         ma175 = price_data["MA175"][-1]
         ma425 = price_data["MA425"][-1]
-
-        # 解析交易量數據
         vol7 = volume_data["VOL7"][-1]
         vol17 = volume_data["VOL17"][-1]
-
-        # 最近的K線收盤價 (1小時K)
         recent_closes = price_data["close"][-4:-1]
 
-        # MA425 上漲訊號
         if (current_price > ma425 and
                 all(close < ma425 for close in recent_closes) and
                 all(current_price > close for close in recent_closes)):
@@ -88,7 +78,6 @@ def check_signals(trading_pair, price_data, volume_data, current_price):
             signal_types.append("MA425上漲")
             logger.info(f"觸發MA425上漲訊號: {signal_msg}")
 
-        # MA425 下跌訊號
         if (current_price < ma425 and
                 all(close > ma425 for close in recent_closes) and
                 all(current_price < close for close in recent_closes)):
@@ -97,7 +86,6 @@ def check_signals(trading_pair, price_data, volume_data, current_price):
             signal_types.append("MA425下跌")
             logger.info(f"觸發MA425下跌訊號: {signal_msg}")
 
-        # MA175 上漲訊號
         if (current_price > ma175 and
                 all(close < ma175 for close in recent_closes) and
                 all(current_price > close for close in recent_closes)):
@@ -106,7 +94,6 @@ def check_signals(trading_pair, price_data, volume_data, current_price):
             signal_types.append("MA175上漲")
             logger.info(f"觸發MA175上漲訊號: {signal_msg}")
 
-        # MA175 下跌訊號
         if (current_price < ma175 and
                 all(close > ma175 for close in recent_closes) and
                 all(current_price < close for close in recent_closes)):
@@ -115,7 +102,6 @@ def check_signals(trading_pair, price_data, volume_data, current_price):
             signal_types.append("MA175下跌")
             logger.info(f"觸發MA175下跌訊號: {signal_msg}")
 
-        # 交易量增加訊號
         if current_volume > vol17 * 3 and vol7 > vol17:
             signal_msg = f"[{trading_pair}] 交易量3倍增，[{current_price}]，[{taipei_time}]"
             signals.append(signal_msg)
@@ -129,13 +115,8 @@ def check_signals(trading_pair, price_data, volume_data, current_price):
     return signals, signal_types
 
 def process_trading_pair(trading_pair, sheet_client):
-    """
-    處理單個交易對的數據
-    """
     try:
         logger.info(f"開始處理交易對: {trading_pair}")
-
-        # 獲取5分鐘K線數據 (用於交易量分析)
         klines_5m = get_klines(trading_pair, interval="5m", limit=500)
         if not klines_5m:
             logger.warning(f"無法獲取 {trading_pair} 的5分鐘K線數據")
@@ -143,8 +124,6 @@ def process_trading_pair(trading_pair, sheet_client):
             return
 
         logger.info(f"成功獲取 {trading_pair} 的5分鐘K線數據，共 {len(klines_5m)} 根")
-
-        # 獲取1小時K線數據 (用於價格分析)
         klines_1h = get_klines(trading_pair, interval="1h", limit=500)
         if not klines_1h:
             logger.warning(f"無法獲取 {trading_pair} 的1小時K線數據")
@@ -152,15 +131,12 @@ def process_trading_pair(trading_pair, sheet_client):
             return
 
         logger.info(f"成功獲取 {trading_pair} 的1小時K線數據，共 {len(klines_1h)} 根")
-
-        # 計算價格指標 (1小時K)
         price_indicators = calculate_price_indicators(klines_1h)
         if not price_indicators:
             logger.warning(f"無法計算 {trading_pair} 的價格指標")
             send_telegram_message(TELEGRAM_TOKEN, TELEGRAM_CHAT_ID, f"無法計算 {trading_pair} 的價格指標")
             return
 
-        # 計算交易量指標 (5分鐘K)
         volume_indicators = calculate_volume_indicators(klines_5m)
         if not volume_indicators:
             logger.warning(f"無法計算 {trading_pair} 的交易量指標")
@@ -168,20 +144,12 @@ def process_trading_pair(trading_pair, sheet_client):
             return
 
         logger.info(f"成功計算 {trading_pair} 的指標")
-
-        # 獲取最新價格
         current_price = float(klines_5m[-1][4])
-
-        # 檢查訊號
         signals, signal_types = check_signals(trading_pair, price_indicators, volume_indicators, current_price)
 
-        # 只有在有訊號時才記錄和發送通知
         if signals:
-            # 發送訊號到Telegram
             for signal in signals:
                 send_telegram_message(TELEGRAM_TOKEN, TELEGRAM_CHAT_ID, signal)
-
-            # 更新Google Sheet
             taipei_time = get_taipei_time()
             row_data = [
                 taipei_time,
@@ -195,12 +163,8 @@ def process_trading_pair(trading_pair, sheet_client):
                 volume_indicators["VOL17"][-1],
                 ", ".join(signal_types)
             ]
-
             update_sheet(sheet_client, SPREADSHEET_ID, SHEET_NAME, row_data)
-
-            # 檢查是否需要清理舊數據
             cleanup_old_data(sheet_client, SPREADSHEET_ID, SHEET_NAME, max_rows=10000)
-
             logger.info(f"完成處理交易對: {trading_pair}，共觸發 {len(signals)} 個訊號")
         else:
             logger.info(f"完成處理交易對: {trading_pair}，無訊號觸發")
@@ -210,7 +174,6 @@ def process_trading_pair(trading_pair, sheet_client):
         send_telegram_message(TELEGRAM_TOKEN, TELEGRAM_CHAT_ID, f"處理 {trading_pair} 失敗: {e}")
 
 def main_task():
-    """主要任務，獲取數據並處理訊號"""
     try:
         logger.info("開始執行主要任務")
         logger.info(f"TELEGRAM_TOKEN: {TELEGRAM_TOKEN[:10]}... (隱藏後續字符)")
@@ -219,7 +182,6 @@ def main_task():
         logger.info(f"SPREADSHEET_ID: {SPREADSHEET_ID}")
         logger.info(f"SHEET_NAME: {SHEET_NAME}")
 
-        # 設置Google Sheet客戶端
         logger.info("設置 Google Sheet 客戶端")
         sheet_client = setup_sheet_client(GOOGLE_SHEET_CREDS_JSON)
         if not sheet_client:
@@ -228,8 +190,6 @@ def main_task():
             return
 
         logger.info("Google Sheet 客戶端設置成功")
-
-        # 獲取交易對列表
         trading_pairs = get_trading_pairs()
         if not trading_pairs:
             logger.error("無法獲取交易對列表")
@@ -237,9 +197,7 @@ def main_task():
             return
 
         logger.info(f"成功獲取 {len(trading_pairs)} 個 USDT 交易對")
-
-        # 處理每個交易對，加入速率限制
-        requests_per_minute = 1200  # Binance API 限制
+        requests_per_minute = 1200
         delay = 60.0 / requests_per_minute
         processed_pairs = 0
         failed_pairs = 0
@@ -263,7 +221,6 @@ def main_task():
         send_telegram_message(TELEGRAM_TOKEN, TELEGRAM_CHAT_ID, f"主要任務失敗: {e}")
 
 def run_scheduler_in_thread():
-    """在單獨的線程中運行定時排程"""
     def run_scheduler():
         logger.info("啟動定時排程")
         schedule.every(5).minutes.do(main_task)
@@ -275,10 +232,8 @@ def run_scheduler_in_thread():
     thread.daemon = True
     thread.start()
 
-# Flask 路由
 @app.route('/', methods=['GET'])
 def index():
-    """處理 HTTP 請求的端點"""
     try:
         logger.info("接收到 HTTP 請求，執行主要任務")
         main_task()
@@ -290,7 +245,6 @@ def index():
 
 @app.route('/run', methods=['GET'])
 def run_analysis():
-    """Cloud Run 觸發的分析任務入口"""
     try:
         logger.info("接收到 /run 請求，執行主要任務")
         main_task()
@@ -302,7 +256,6 @@ def run_analysis():
 
 @app.route('/test-telegram', methods=['GET'])
 def test_telegram():
-    """測試 Telegram 通知"""
     try:
         logger.info(f"接收到 /test-telegram 請求，發送測試訊息")
         logger.info(f"TELEGRAM_TOKEN: {TELEGRAM_TOKEN[:10]}...")
@@ -317,7 +270,6 @@ def test_telegram():
 
 @app.route('/test-sheet', methods=['GET'])
 def test_sheet():
-    """測試 Google Sheets 更新"""
     try:
         logger.info("接收到 /test-sheet 請求，測試 Google Sheets 更新")
         logger.info(f"GOOGLE_SHEET_CREDS_JSON: {GOOGLE_SHEET_CREDS_JSON[:50]}...")
@@ -330,7 +282,6 @@ def test_sheet():
         send_telegram_message(TELEGRAM_TOKEN, TELEGRAM_CHAT_ID, f"測試 Google Sheets 失敗: {e}")
         return f"Error: {str(e)}", 500
 
-# 主程式入口
 if __name__ == "__main__":
     try:
         logger.info("程式啟動")
