@@ -264,3 +264,4 @@ if __name__ == "__main__":
     except Exception as e:
         logger.error(f"程式執行發生錯誤: {e}")
         send_telegram_message(TELEGRAM_TOKEN, TELEGRAM_CHAT_ID, f"程式啟動失敗: {e}")
+
