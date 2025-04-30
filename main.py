@@ -102,13 +102,13 @@ def check_signals(trading_pair, price_data, volume_data, current_price):
 def process_trading_pair(trading_pair, sheet_client):
     try:
         logger.info(f"開始處理交易對: {trading_pair}")
-        klines_5m = get_klines(trading_pair, interval="5m", limit=430)
+        klines_5m = get_klines(trading_pair, interval="5m", limit=500)
         if not klines_5m:
             logger.warning(f"無法獲取 {trading_pair} 的5分鐘K線數據")
             send_telegram_message(TELEGRAM_TOKEN, TELEGRAM_CHAT_ID, f"無法獲取 {trading_pair} 的5分鐘K線數據")
             return
         logger.info(f"成功獲取 {trading_pair} 的5分鐘K線數據，共 {len(klines_5m)} 根")
-        klines_1h = get_klines(trading_pair, interval="1h", limit=430)
+        klines_1h = get_klines(trading_pair, interval="1h", limit=500)
         if not klines_1h:
             logger.warning(f"無法獲取 {trading_pair} 的1小時K線數據")
             send_telegram_message(TELEGRAM_TOKEN, TELEGRAM_CHAT_ID, f"無法獲取 {trading_pair} 的1小時K線數據")
